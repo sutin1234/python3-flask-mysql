@@ -15,7 +15,8 @@ def get_student():
         sql = "SELECT * FROM student"
         cur.execute(sql)
         rows = cur.fetchall()
-        return render_template('student/show.html', title=title_text, topic=topic_text, rows=rows)
+        conn.close()
+    return render_template('student/show.html', title=title_text, topic=topic_text, rows=rows)
 
 
 @router_student.route('/profile/<sid>', methods=['GET'])
@@ -24,6 +25,8 @@ def profile(sid):
         sql = "SELECT * FROM student WHERE sid=%s"
         cur.execute(sql, (sid))
         row_data = cur.fetchone()
+        cur.close()
+        conn.close()
     return json.dumps(row_data)
 
 
@@ -38,21 +41,35 @@ def save_student():
     slname = request.form['slname']
     sage = request.form['sage']
 
-    with conn.cursor() as cur:
-        sql = "INSERT INTO  student VALUES(null, %s,%s,%s)"
-        cur.execute(sql, (sfname, slname, sage))
-        conn.commit()
-    # show is function name for redirect
+    try:
+        with conn.cursor() as cur:
+            sql = "INSERT INTO  student VALUES(null, %s,%s,%s)"
+            cur.execute(sql, (sfname, slname, sage))
+            conn.commit()
+            cur.close()
+            conn.close()  # show is function name for redirect
+    except Exception as ex:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        print(message)
+
     return redirect(url_for("get_student"))
 
 
 @router_student.route("/delete/<id>")
 def delete_student(id):
-    with conn.cursor() as cur:
-        sql = "DELETE FROM student WHERE sid=%s"
-        cur.execute(sql, (id))
-        conn.commit()
-    # show is function name for redirect
+    try:
+        with conn.cursor() as cur:
+            sql = "DELETE FROM student WHERE sid=%s"
+            cur.execute(sql, (id))
+            conn.commit()
+            cur.close()
+            conn.close()  # show is function name for redirect
+    except Exception as ex:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        print(message)
+
     return redirect(url_for("get_student"))
 
 
@@ -62,6 +79,8 @@ def edit_student(id):
         sql = "SELECT * FROM student WHERE sid=%s"
         cur.execute(sql, (id))
         row_data = cur.fetchone()
+        cur.close()
+        conn.close()
     return render_template('student/edit.html', title=title_text, topic=topic_text, row=row_data)
 
 
@@ -72,9 +91,16 @@ def update_student():
     slname = request.form['slname']
     sage = request.form['sage']
 
-    with conn.cursor() as cur:
-        sql = "UPDATE student SET sfname=%s, slname=%s, sage=%s WHERE sid=%s"
-        cur.execute(sql, (sfname, slname, sage, sid))
-        conn.commit()
-    # show is function name for redirect
+    try:
+        with conn.cursor() as cur:
+            sql = "UPDATE student SET sfname=%s, slname=%s, sage=%s WHERE sid=%s"
+            cur.execute(sql, (sfname, slname, sage, sid))
+            conn.commit()
+            cur.close()
+            conn.close()  # show is function name for redirect
+    except Exception as e:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        message = template.format(type(ex).__name__, ex.args)
+        print(message)
+
     return redirect(url_for("get_student"))
